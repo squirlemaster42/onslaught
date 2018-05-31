@@ -1,3 +1,6 @@
+func = require "functions"
+ground = require "ground"
+
 local player = {}
 
 player_height = 100
@@ -28,6 +31,7 @@ player.fire = function()
     bullet.width = 10
     bullet.height = 10
     bullet.speed = 5
+
     table.insert(player.bullets, bullet)
 end
 
@@ -41,6 +45,36 @@ player.gravity_update = function()
     if (player.y + 100) >= ground.y then
         player.y = ground.y - 100
         player.jump_available = true
+    end
+end
+
+update_bullet = function(b)
+    b.x = b.x + b.speed
+end
+
+---- update method ----
+player.update = function()
+    if love.keyboard.isDown("w") and player.jump_available then
+        player.jump()
+        player.jump_available = false
+    else
+        player.gravity_update()
+    end
+    if love.keyboard.isDown("s") then
+        player.duck()
+    end
+    if love.keyboard.isDown("space") and player.fire_available then
+        player.fire()
+        player.fire_available = false
+    end
+    if not love.keyboard.isDown("space") then
+        player.fire_available = true
+    end
+
+    player.y = player.y + player.y_change
+
+    for _,v in pairs(player.bullets) do
+        update_bullet(v)
     end
 end
 
