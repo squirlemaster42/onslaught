@@ -4,26 +4,61 @@ function love.load()
     height = 720
     love.window.setMode(width, height)
 
-    -- player 1
-    left_player = {}
-    left_player.x = 50
-    left_player.size = 200
-    left_player.y = height / 2 - (left_player.size / 2)
+    -- environmental vairables
+    gravity = .5
+    love.keyboard.setKeyRepeat(false)
 
-    -- player 2
-    right_player = {}
-    right_player.x = 1190
-    right_player.size = 200
-    right_player.y = height / 2 - (right_player.size / 2)
+    ground = {}
+    ground.y = 600
 
-    -- ball
-    ball = {}
-    ball.width = 20
-    ball.height = 20
-    ball.x = width / 2 - (ball.width / 2)
-    ball.y = height / 2 - (ball.height / 2)
-    ball.x_speed = 2
-    ball.y_speed = 2
+    -- player
+    player_height = 100
+
+    player = {}
+    player.x = 50
+    player.y = 500
+    player.height = player_height
+    player.width = 40
+    player.y_change = 0
+    player.fire_available = true
+    player.jump_available = true
+        -- player functions --
+    player.duck = function()
+        player.height = 50
+    end
+
+    player.jump = function()
+        player.y_change = -15
+    end
+
+    player.fire = function()
+        bullet = {}
+        bullet.x = player.x + player.width
+        bullet.y = player.y + player.height / 3
+        bullet.width = 10
+        bullet.height = 10
+        bullet.speed = 5
+        table.insert(player.bullets, bullet)
+    end
+
+    player.gravity_update = function()
+        if not ((player.y + 100) >= ground.y) then
+            player.y_change = player.y_change + gravity
+        else
+            player.y_change = 0
+        end
+
+        if (player.y + 100) >= ground.y then
+            player.y = ground.y - 100
+            player.jump_available = true
+        end
+    end
+
+    -- enemies
+    enemies = {}
+
+    -- projectiles
+    player.bullets = {}
 
     --functions
     check_collision = function(x1, y1, w1, h1, x2, y2, w2, h2)
@@ -35,39 +70,66 @@ function love.load()
 end
 
 function love.update(dt)
+    player.height = player_height
     -- controls
-    if love.keyboard.isDown("w") then
-        left_player.y = left_player.y - 3
+    if love.keyboard.isDown("w") and player.jump_available then
+        player.jump()
+        player.jump_available = false
+    else
+        player.gravity_update()
     end
     if love.keyboard.isDown("s") then
-        left_player.y = left_player.y + 3
+        player.duck()
+    end
+    if love.keyboard.isDown("space") and player.fire_available then
+        player.fire()
+        player.fire_available = false
+    end
+    if not love.keyboard.isDown("space") then
+        player.fire_available = true
     end
 
-    if love.keyboard.isDown("up") then
-        right_player.y = right_player.y - 3
-    end
-    if love.keyboard.isDown("down") then
-        right_player.y = right_player.y + 3
+    for _,v in pairs(player.bullets) do
+        v.x = v.x + v.speed
     end
 
-    -- check collision
-    if check_collision(ball.x, ball.y, ball.width, ball.height, left_player.x, left_player.y, 40, left_player.size)
-    or check_collision(ball.x, ball.y, ball.width, ball.height, right_player.x, right_player.y, 40, right_player.size) then
-        ball.x_speed = ball.x_speed * -1
+    player.y = player.y + player.y_change
+
+    if love.timer.getTime() % 2 == 0 then
+        base_enemy = {}
+        base_enemy.x = 1200
+        base_enemy.y = 400 + love.math.random() * 100
+        base_enemy.width = 50
+        base_enemy.height = 200
+        base_enemy.speed = 5
+        table.insert(enemies, base_enemy)
     end
 
-    -- ball movement
-    ball.x = ball.x + ball.x_speed
-    ball.y = ball.y + ball.y_speed
+    for _,v in pairs(enemies) do
+        v.x = v.x - v.speed
+    end
 
-    if ball.y + ball.height >= height or ball.y <= 0 then
-        ball.y_speed = ball.y_speed * -1
+    if (player.y - 100) > ground.y then
+        player.y = ground.y - 100
     end
 end
 
 function love.draw()
-    -- draw rectangles
-    love.graphics.rectangle("fill", left_player.x, left_player.y, 40, left_player.size)
-    love.graphics.rectangle("fill", right_player.x, right_player.y, 40, right_player.size)
-    love.graphics.rectangle("fill", ball.x, ball.y, ball.width, ball.height)
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.print(love.timer.getFPS(), 1250, 700)
+    love.graphics.rectangle("line", player.x, player.y, player.width, player.height)
+    love.graphics.setColor(255, 0, 0)
+    for _,v in pairs(player.bullets) do
+        love.graphics.rectangle("fill", v.x, v.y, v.width, v.height)
+    end
+
+    love.graphics.setColor(255, 0, 255)
+    for _,v in pairs(enemies) do
+        love.graphics.rectangle("fill", v.x, v.y, v.width, v.height)
+    end
+    -- ground
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.rectangle("fill", 20, ground.y, 1240, 10)
+    love.graphics.setColor(0, 0, 0)
+    --love.graphics.rectangle("fill", 0, ground.y + 10, 1280, 110)
 end
