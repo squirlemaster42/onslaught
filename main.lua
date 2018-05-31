@@ -9,7 +9,7 @@ function love.load()
     love.window.setMode(width, height)
 
     -- environmental vairables
-    gravity = .5
+    gravity = .4
 
     -- enemies
     enemies = {}
