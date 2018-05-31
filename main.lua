@@ -56,6 +56,7 @@ function love.load()
 
     -- enemies
     enemies = {}
+    last_spawned = love.timer.getTime()
 
     -- projectiles
     player.bullets = {}
@@ -95,7 +96,7 @@ function love.update(dt)
 
     player.y = player.y + player.y_change
 
-    if love.timer.getTime() % 2 == 0 then
+    if (love.timer.getTime() - last_spawned) >= 2 then
         base_enemy = {}
         base_enemy.x = 1200
         base_enemy.y = 400 + love.math.random() * 100
@@ -103,6 +104,7 @@ function love.update(dt)
         base_enemy.height = 200
         base_enemy.speed = 5
         table.insert(enemies, base_enemy)
+        last_spawned = love.timer.getTime()
     end
 
     for _,v in pairs(enemies) do
