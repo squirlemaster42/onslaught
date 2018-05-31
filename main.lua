@@ -41,6 +41,7 @@ function love.update(dt)
 
     player.update()
 
+    -- check collision between bullets and enemies, then remove them
     for a,x in ipairs(enemies) do
         for b,y in ipairs(player.bullets) do
             if func.check_collision(x, y) then
